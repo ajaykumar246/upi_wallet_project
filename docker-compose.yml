@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # 1. Your Node.js App
+  api:
+    build: .             # Build from the current folder
+    container_name: upi_app_container
+    ports:
+      - "3000:3000"      # Open port 3000 to your laptop
+    environment:
+      - DB_HOST=postgres_db  # This matches the service name below!
+      - DB_USER=postgres
+      - DB_PASSWORD=admin
+      - DB_NAME=upi_project
+      - DB_PORT=5432
+      - REDIS_HOST=redis_cache # This matches the service name below!
+      - REDIS_PORT=6379
+      - JWT_SECRET=qwertyuiopasdfghjklzxcvbnm
+    depends_on:
+      - postgres_db
+      - redis_cache
+    restart: always
+
+  # 2. PostgreSQL Database
+  postgres_db:
+    image: postgres:18.1
+    container_name: upi_db_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: upi_project
+    ports:
+      - "5432:5432"      # So you can check DB via Postman/PgAdmin
+    volumes:
+      - pgdata:/var/lib/postgresql  # Save data even if container stops
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Auto-run our SQL script
+    restart: always
+
+  # 3. Redis Cache
+  redis_cache:
+    image: redis:alpine
+    container_name: upi_redis_container
+    ports:
+      - "6379:6379"
+    restart: always
+
+# Define the volume for persistent data
+volumes:
+  pgdata:

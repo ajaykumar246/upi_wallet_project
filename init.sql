@@ -1,0 +1,24 @@
+CREATE TABLE IF NOT EXISTS users(
+id SERIAL,
+username VARCHAR(50) NOT NULL,
+vpa VARCHAR(50) NOT NULL,
+balance DECIMAL(10,2) DEFAULT 0.00,
+password VARCHAR(256) NOT NULL,
+CONSTRAINT users_pk PRIMARY KEY (username),
+CONSTRAINT vpa_uk UNIQUE (vpa));
+
+CREATE TABLE IF NOT EXISTS upi(
+    vpa VARCHAR(50) REFERENCES users(vpa) ON DELETE CASCADE,
+    pin VARCHAR(256)
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id SERIAL PRIMARY KEY,
+    sender_vpa VARCHAR(50) NOT NULL,
+    receiver_vpa VARCHAR(50) NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    category VARCHAR(20),
+    status VARCHAR(20) DEFAULT 'SUCCESS',
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
