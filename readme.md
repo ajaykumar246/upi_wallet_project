@@ -202,6 +202,34 @@ All transaction routes require authentication (JWT token in header).
     }
     ```
 
+    #### 3. Deposit
+- **Endpoint**: `POST /api/deposit`
+- **Description**: Cash deposit by admin.
+- **Headers**:
+  ```
+  Authorization: Bearer <token>
+  ```
+- **Request Body**:
+  ```json
+  {
+    "receiver_vpa": "string",
+    "amount": "number",
+  }
+  ```
+- **Response**:
+  - Success (200):
+    ```json
+    {
+      "balance": "number"
+    }
+    ```
+  - Error (400):
+    ```json
+    {
+      "error": "string"
+    }
+    ```
+
 ## Database Schema
 - **users**: Stores user information (username, vpa, balance, password).
 - **upi**: Stores UPI pins linked to vpa.
