@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     amount DECIMAL(10, 2) NOT NULL,
     category VARCHAR(20),
     status VARCHAR(20) DEFAULT 'SUCCESS',
+    idempotency_key VARCHAR(100),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
