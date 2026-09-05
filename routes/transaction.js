@@ -194,7 +194,78 @@ const history=async(req,res)=>{
     }
 }
 
+const deposit = async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const vpa = req.user.vpa;
+        const { amount } = req.body;
+        if (!amount || amount <= 0) throw new Error("Invalid amount");
+        
+        await client.query('UPDATE users SET balance = balance + $1 WHERE vpa = $2', [amount, vpa]);
+        
+        await client.query(
+            "INSERT INTO transactions (sender_vpa, receiver_vpa, amount, category, status) VALUES ($1, $2, $3, $4, $5)",
+            ['mock_bank@upi', vpa, amount, 'Deposit', 'SUCCESS']
+        );
+        
+        res.json({ message: "Deposit successful" });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+}
+
+const hasPin = async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const vpa = req.user.vpa;
+        const result = await client.query('SELECT 1 FROM upi WHERE vpa = $1', [vpa]);
+        res.json({ hasPin: result.rowCount > 0 });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+}
+
+const updatePin = async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const vpa = req.user.vpa;
+        const { newPin, oldPin, password } = req.body;
+        
+        if (!newPin) throw new Error("New PIN is required");
+        
+        if (oldPin) {
+            const upiRes = await client.query('SELECT pin FROM upi WHERE vpa = $1', [vpa]);
+            if (upiRes.rowCount === 0) throw new Error("PIN not set");
+            const valid = await bcrypt.compare(oldPin, upiRes.rows[0].pin);
+            if (!valid) throw new Error("Incorrect old PIN");
+        } else if (password) {
+            const userRes = await client.query('SELECT password FROM users WHERE vpa = $1', [vpa]);
+            if (userRes.rowCount === 0) throw new Error("User not found");
+            const valid = await bcrypt.compare(password, userRes.rows[0].password);
+            if (!valid) throw new Error("Incorrect account password");
+        } else {
+            throw new Error("Must provide either old PIN or account password to update");
+        }
+        
+        const hashedPin = await bcrypt.hash(newPin, 10);
+        await client.query('UPDATE upi SET pin = $1 WHERE vpa = $2', [hashedPin, vpa]);
+        
+        res.json({ message: "PIN updated successfully" });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+}
+
 module.exports.pay=pay;
 module.exports.balance=balance;
 module.exports.createPin=createPin;
 module.exports.history=history;
+module.exports.deposit=deposit;
+module.exports.hasPin=hasPin;
+module.exports.updatePin=updatePin;

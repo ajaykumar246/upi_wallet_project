@@ -12,7 +12,10 @@ app.use(cors());
 app.use('/api/auth',authRouter);
 // Payment Route
 app.post('/api/createpin',authenticateToken,transaction.createPin);
+app.get('/api/haspin', authenticateToken, transaction.hasPin);
+app.put('/api/pin', authenticateToken, transaction.updatePin);
 app.post('/api/pay', authenticateToken,transaction.pay);
+app.post('/api/deposit', authenticateToken,transaction.deposit);
 app.get('/api/balance',authenticateToken,transaction.balance);
 app.get('/api/history',authenticateToken,transaction.history);
 
